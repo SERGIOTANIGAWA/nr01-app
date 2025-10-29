@@ -59,15 +59,41 @@
     return qs.every(qc => (values[qc] && values[qc]>=1 && values[qc]<=5));
   }
 
-  function render(){
+  async function fetchPerguntas(codes){
+    const url = new URL(`${SUPA_URL}/rest/v1/perguntas`);
+    url.searchParams.set('select','codigo,enunciado'); // se sua coluna for 'texto', troque para 'codigo,texto'
+    url.searchParams.set('codigo', `in.(${codes.join(',')})`);
+    url.searchParams.set('order','ordem');
+
+    const res = await fetch(url.toString(), {
+      headers:{
+        'apikey': SUPA_ANON_KEY,
+        'Authorization': `Bearer ${SUPA_ANON_KEY}`
+      }
+    });
+    if(!res.ok){
+      console.error('Falha ao carregar perguntas', res.status, await res.text());
+      return {};
+    }
+    const rows = await res.json();
+    const map = {};
+    rows.forEach(r => { map[r.codigo] = r.enunciado; /* se for 'texto': r.texto */ });
+    return map;
+  }
+
+  async function render(){
     const mod = MODS[step];
     $title.textContent = mod.name;
     $qs.innerHTML='';
+
+    const textos = await fetchPerguntas(mod.qs);
+
     mod.qs.forEach((code)=>{
       const div = document.createElement('div');
       div.className='q';
       const lab = document.createElement('label');
-      lab.textContent = code + ' — selecione sua resposta';
+      const enun = textos[code] || 'selecione sua resposta';
+      lab.textContent = `${code} — ${enun}`;
       div.appendChild(lab);
       div.appendChild(sel(code, values[code]));
       $qs.appendChild(div);
@@ -102,13 +128,30 @@
         $msg.innerHTML = '<span class="err">❌ Erro ao enviar. Verifique o token e tente novamente.</span>';
         return;
       }
-      console.log('RPC ok', txt);
       $msg.innerHTML = '<span class="ok">✅ Módulo enviado com sucesso.</span>';
+
       if(step < MODS.length-1){
         step++;
         render();
         window.scrollTo({top:0,behavior:'smooth'});
       }else{
+        try{
+          const fin = await fetch(`${SUPA_URL}/rest/v1/rpc/concluir_token`,{
+            method:'POST',
+            headers:{
+              'apikey': SUPA_ANON_KEY,
+              'Authorization': `Bearer ${SUPA_ANON_KEY}`,
+              'Content-Type':'application/json'
+            },
+            body: JSON.stringify({ p_token: token })
+          });
+          if(!fin.ok){
+            console.warn('Falha ao concluir token:', fin.status, await fin.text());
+          }
+        }catch(e){
+          console.warn('Erro ao concluir token:', e);
+        }
+
         $title.textContent = 'Concluído: todos os módulos enviados.';
         $qs.innerHTML='';
         $prev.disabled=true;
@@ -125,4 +168,4 @@
 
   $token.value = getTokenFromURL();
   render();
-})(); 
+})();
