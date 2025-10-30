@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recuperar Acesso — NR‑01</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    window.NR01_CONFIG = {
+      SUPA_URL: "https://ykmkvgwlnlxiqeucdttb.supabase.co",
+      SUPA_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrbWt2Z3dsbmx4aXFldWNkdHRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0Mzk5MDgsImV4cCI6MjA3NzAxNTkwOH0.A4EtdeBxXUsg0xdc37yRDH5GEYFqZIQOOcqXq-F_ZVY"
+    };
+    try {
+      const u = localStorage.getItem("NR01_SUPA_URL");
+      const k = localStorage.getItem("NR01_SUPA_ANON");
+      if (u && k) {
+        window.NR01_CONFIG.SUPA_URL = u;
+        window.NR01_CONFIG.SUPA_ANON_KEY = k;
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <main class="container">
+    <h1>Recuperar Acesso</h1>
+    <div class="card">
+      <label for="email">E‑mail corporativo</label>
+      <input id="email" type="email" placeholder="ex.: pessoa@empresa.com" />
+      <div class="actions">
+        <button id="send" class="primary">Enviar link</button>
+      </div>
+      <p id="msg" class="msg"></p>
+    </div>
+  </main>
+  <script>
+  const SUPA_URL = window.NR01_CONFIG.SUPA_URL;
+  const SUPA_ANON = window.NR01_CONFIG.SUPA_ANON_KEY;
+  const APP_URL = "index.html";
+
+  document.getElementById('send').addEventListener('click', async () => {
+    const email = (document.getElementById('email').value||'').trim();
+    if(!email) { document.getElementById('msg').textContent = 'Informe seu e‑mail.'; return; }
+    document.getElementById('msg').textContent = 'Gerando link…';
+    try {
+      const r = await fetch(`${SUPA_URL}/rest/v1/rpc/get_or_issue_token`, {
+        method:'POST',
+        headers:{ 'apikey': SUPA_ANON, 'Authorization':`Bearer ${SUPA_ANON}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ p_email: email })
+      });
+      const token = await r.text();
+      if(r.ok && token) {
+        window.location.href = `${APP_URL}?token=${token}`;
+      } else {
+        document.getElementById('msg').textContent = 'Não foi possível emitir o link. Tente novamente.';
+      }
+    } catch(e) {
+      document.getElementById('msg').textContent = 'Falha de conexão. Tente novamente.';
+    }
+  });
+  </script>
+</body>
+</html>

@@ -2,71 +2,40 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NR-01 — Respostas Sequenciais</title>
-  <style>
-    :root {
-      --azul:#0A2240;
-      --azul-2:#11335f;
-      --cinza:#f2f4f7;
-      --borda:#e5e7eb;
-      --ok:#065f46;
-      --err:#991b1b;
-    }
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;background:#fff;color:#0f172a;margin:0;padding:24px}
-    .wrap{max-width:820px;margin:0 auto}
-    h1{font-size:22px;margin:0 0 16px;color:var(--azul)}
-    .card{border:1px solid var(--borda);border-radius:12px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.06)}
-    .box{padding:16px}
-    .label{font-size:12px;color:#475569;margin-bottom:6px;display:block}
-    input[type="text"]{width:100%;border:1px solid var(--borda);border-radius:8px;padding:10px 12px;font-size:14px}
-    .progress-outer{height:8px;background:var(--cinza);border-radius:999px;overflow:hidden}
-    #progress{height:8px;width:0;background:linear-gradient(90deg,var(--azul),var(--azul-2));transition:width .3s}
-    #moduleTitle{font-weight:600;margin:8px 0 8px 0;color:#111827}
-    .q{border-top:1px solid var(--borda);padding:12px 0}
-    .q:first-child{border-top:none}
-    label{display:block;font-size:14px;margin-bottom:6px}
-    select{width:100%;border:1px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:14px;background:#fff}
-    .nav{display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:16px}
-    button{appearance:none;border:none;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
-    #prev{background:#e5e7eb;color:#111827}
-    #next{background:var(--azul);color:#fff}
-    #msg{margin-top:8px;font-size:14px}
-    .ok{color:var(--ok)}
-    .err{color:var(--err)}
-    footer{margin-top:24px;color:#64748b;font-size:12px;text-align:center}
-  </style>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NR‑01 — Questionário (8 módulos)</title>
+  <link rel="stylesheet" href="style.css">
   <script>
     window.NR01_CONFIG = {
       SUPA_URL: "https://ykmkvgwlnlxiqeucdttb.supabase.co",
       SUPA_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrbWt2Z3dsbmx4aXFldWNkdHRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0Mzk5MDgsImV4cCI6MjA3NzAxNTkwOH0.A4EtdeBxXUsg0xdc37yRDH5GEYFqZIQOOcqXq-F_ZVY"
     };
+    try {
+      const u = localStorage.getItem("NR01_SUPA_URL");
+      const k = localStorage.getItem("NR01_SUPA_ANON");
+      if (u && k) {
+        window.NR01_CONFIG.SUPA_URL = u;
+        window.NR01_CONFIG.SUPA_ANON_KEY = k;
+      }
+    } catch (e) {}
   </script>
 </head>
 <body>
-  <div class="wrap">
-    <h1>NR-01 — Respostas Sequenciais</h1>
-
-    <div class="card box">
-      <label class="label" for="token">Token de Acesso</label>
-      <input id="token" type="text" placeholder="Cole aqui seu token…">
-      <div class="progress-outer" style="margin-top:12px;"><div id="progress"></div></div>
-      <div id="moduleTitle" style="margin-top:10px;"></div>
+  <main class="container">
+    <h1>NR‑01 — Diagnóstico por Etapas</h1>
+    <div class="card">
+      <label for="token">Token</label>
+      <input id="token" type="text" placeholder="Cole aqui seu token" />
+      <div class="progressWrap"><div id="progress"></div></div>
+      <h2 id="moduleTitle"></h2>
       <div id="questions"></div>
-
-      <div class="nav">
+      <div class="actions">
         <button id="prev" type="button">◀ Voltar</button>
-        <div style="flex:1"></div>
-        <button id="next" type="button">Enviar módulo ▶</button>
+        <button id="next" type="button" class="primary">Enviar módulo ▶</button>
       </div>
-
-      <div id="msg"></div>
+      <p id="msg" class="msg"></p>
     </div>
-
-    <footer>Tema azul Tanigawa • App sequencial (8 módulos) • © Tanigawa Institute</footer>
-  </div>
-
-  <script src="./app.js"></script>
+  </main>
+  <script src="app.js"></script>
 </body>
 </html>
