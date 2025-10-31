@@ -1,41 +1,90 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NR‑01 — Questionário (8 módulos)</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NR-01 — Diagnóstico por Etapas</title>
+  <style>
+    :root { --azul:#0b2647; --cinza:#f2f4f7; --borda:#d7dbe3; --ok:#0a7f3f; --err:#b00020; }
+    * { box-sizing: border-box; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background:#fff; color:#111; }
+    .wrap { max-width: 920px; margin: 24px auto 64px; padding: 0 16px; }
+    h1 { font-size: 28px; margin: 8px 0 16px; }
+    .row { margin: 12px 0 18px; }
+    small { display:block; font-size:12px; color:#49566a; margin:0 0 6px; }
+    input, select { width: 100%; padding: 14px 12px; border:1px solid var(--borda); border-radius:10px; background:#fff; }
+    select { background:#fff; }
+    .token-input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .card { background:#fff; border:1px solid var(--borda); border-radius:16px; padding:16px; }
+    .q { margin: 14px 0 18px; }
+    .q label { display:block; font-weight:600; margin: 0 0 8px; color:#0f1a2b; }
+    .barbox { background:var(--cinza); border-radius: 8px; height: 8px; overflow: hidden; }
+    .bar { height: 100%; width: 0%; background: var(--azul); transition: width .25s ease; }
+    .actions { display:flex; gap:12px; justify-content:space-between; align-items:center; }
+    .btn { border:0; padding:12px 16px; border-radius:12px; background:#e8edf5; color:#0b2647; font-weight:700; cursor:pointer; }
+    .btn[disabled] { opacity:.5; cursor:not-allowed; }
+    .btn.primary { background:var(--azul); color:#fff; }
+    .msg { min-height: 22px; font-weight:600; }
+    .msg .ok { color: var(--ok); }
+    .msg .err { color: var(--err); }
+    .muted { font-size:12px; color:#61718a; }
+    .recuperar { margin-top: 28px; padding: 16px; border:1px dashed var(--borda); border-radius:16px; }
+    .two { display:grid; grid-template-columns: 1fr; gap:12px; }
+    @media(min-width:720px){ .two { grid-template-columns: 1fr 1fr; } }
+  </style>
   <script>
-    window.NR01_CONFIG = {
-      SUPA_URL: "https://ykmkvgwlnlxiqeucdttb.supabase.co",
-      SUPA_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrbWt2Z3dsbmx4aXFldWNkdHRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0Mzk5MDgsImV4cCI6MjA3NzAxNTkwOH0.A4EtdeBxXUsg0xdc37yRDH5GEYFqZIQOOcqXq-F_ZVY"
-    };
-    try {
-      const u = localStorage.getItem("NR01_SUPA_URL");
-      const k = localStorage.getItem("NR01_SUPA_ANON");
-      if (u && k) {
-        window.NR01_CONFIG.SUPA_URL = u;
-        window.NR01_CONFIG.SUPA_ANON_KEY = k;
-      }
-    } catch (e) {}
+    // ==== CONFIGURAÇÃO ====
+    const SUPA_URL = "https://ykmkvgwlnlxiqeucdttb.supabase.co";
+    const SUPA_ANON_KEY = (new URL(window.location.href)).searchParams.get("key")
+      || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrbWt2Z3dsbmx4aXFldWNkdHRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0Mzk5MDgsImV4cCI6MjA3NzAxNTkwOH0.A4EtdeBxXUsg0xdc37yRDH5GEYFqZIQOOcqXq-F_ZVY";
+    window.NR01_CONFIG = { SUPA_URL, SUPA_ANON_KEY };
   </script>
 </head>
 <body>
-  <main class="container">
-    <h1>NR‑01 — Diagnóstico por Etapas</h1>
-    <div class="card">
-      <label for="token">Token</label>
-      <input id="token" type="text" placeholder="Cole aqui seu token" />
-      <div class="progressWrap"><div id="progress"></div></div>
-      <h2 id="moduleTitle"></h2>
+  <div class="wrap">
+    <h1>NR-01 — Diagnóstico por Etapas</h1>
+    <div class="barbox" title="Progresso">
+      <div id="progress" class="bar"></div>
+    </div>
+
+    <div class="row" style="margin-top:16px;">
+      <small>Token de Acesso</small>
+      <input id="token" type="text" class="token-input" placeholder="Cole aqui o token recebido do RH" />
+    </div>
+
+    <div class="card" style="margin-top:8px;">
+      <h3 id="moduleTitle" style="margin:0 0 12px;"></h3>
       <div id="questions"></div>
       <div class="actions">
-        <button id="prev" type="button">◀ Voltar</button>
-        <button id="next" type="button" class="primary">Enviar módulo ▶</button>
+        <button id="prev" class="btn" type="button">◀ Voltar</button>
+        <div class="msg" id="msg"></div>
+        <button id="next" class="btn primary" type="button">Enviar módulo ▶</button>
       </div>
-      <p id="msg" class="msg"></p>
+      <div class="muted" style="margin-top:10px;">* As respostas são enviadas por etapa (1/8 a 8/8).</div>
     </div>
-  </main>
-  <script src="app.js"></script>
+
+    <div class="recuperar">
+      <h3 style="margin-top:0">Recuperar Acesso ao Questionário</h3>
+      <p class="muted">Se não tiver um token, informe seu nome e e‑mail. Emitiremos (ou recuperaremos) um token válido.</p>
+      <div class="two">
+        <div>
+          <small>Nome</small>
+          <input id="rec_nome" type="text" placeholder="Seu nome completo" />
+        </div>
+        <div>
+          <small>E‑mail</small>
+          <input id="rec_email" type="email" placeholder="seuemail@empresa.com.br" />
+        </div>
+      </div>
+      <div class="actions" style="margin-top:12px;">
+        <span class="muted">Receba um token e abriremos o formulário automaticamente.</span>
+        <button id="btnRecuperar" class="btn" type="button">Receber acesso agora</button>
+      </div>
+    </div>
+
+    <p class="muted" style="margin-top:28px;">© Tanigawa Institute — App sequencial (8 módulos).</p>
+  </div>
+
+  <script src="./app.js"></script>
 </body>
 </html>
